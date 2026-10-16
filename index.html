@@ -1,0 +1,490 @@
+<title>Ontology of Ask</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a fixed graph pane the reader points at, with an inspector beside it; below, the sixteen triples as a ledger, the dual reading as two columns over one table, the six implications, and a working traversal where Answers accrete into the Substrate. */
+:root{
+  --bg:#f3f1ec; --surface:#faf9f6; --ink:#1d2230; --ink-2:#55596a; --ink-3:#8b8f9d; --line:#d6d3cb;
+  --ask:#5b4ea8;     /* potential: violet */
+  --ask-soft:#e6e2f4;
+  --answer:#b4642c;  /* actual: copper */
+  --answer-soft:#f3e3d4;
+  --sub:#3f6f6a;     /* substrate: teal */
+  --sub-soft:#dcebe8;
+  --self:#8f7a3c;    /* I / Important: ochre */
+  --self-soft:#efe8d2;
+  --focus:#1d2230;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Source Serif 4",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15171d; --surface:#1c1f27; --ink:#e8e6df; --ink-2:#aeb0ba; --ink-3:#777a87; --line:#2f333e;
+  --ask:#a79bea; --ask-soft:#2a2740; --answer:#e0955c; --answer-soft:#3a2a1c; --sub:#7cc2b9; --sub-soft:#1f3331; --self:#d1b65f; --self-soft:#332d1b; --focus:#e8e6df; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15171d; --surface:#1c1f27; --ink:#e8e6df; --ink-2:#aeb0ba; --ink-3:#777a87; --line:#2f333e;
+  --ask:#a79bea; --ask-soft:#2a2740; --answer:#e0955c; --answer-soft:#3a2a1c; --sub:#7cc2b9; --sub-soft:#1f3331; --self:#d1b65f; --self-soft:#332d1b; --focus:#e8e6df; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+h1,h2,h3{font-family:var(--display);font-weight:300;text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(44px,7vw,84px);letter-spacing:-.01em}
+h2{font-size:clamp(28px,3.6vw,40px)}
+h3{font-size:22px;font-weight:500}
+p{margin:0;max-width:66ch}
+em{font-style:italic}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.mono{font-family:var(--mono)}
+a{color:inherit}
+
+header.hero{padding-block:56px 36px;display:grid;gap:18px;border-bottom:1px solid var(--line)}
+.hero .count{display:flex;gap:28px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;color:var(--ink-2)}
+.hero .count b{font-weight:500;color:var(--ink);font-size:22px;font-family:var(--display);margin-right:6px}
+.hero .lede{font-size:20px;color:var(--ink-2);max-width:60ch}
+
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;padding-block:8px;margin-bottom:40px;scrollbar-width:none}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.toc a{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;text-decoration:none;color:var(--ink-2);padding:6px 10px;border-radius:4px;white-space:nowrap}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--ink);background:var(--surface);outline:none}
+
+section{padding-block:28px 56px;display:grid;gap:22px}
+section + section{border-top:1px solid var(--line)}
+.sec-head{display:grid;gap:8px}
+
+/* graph + inspector */
+.explore{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.explore{grid-template-columns:1fr}}
+.graph{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.graph svg{width:100%;height:auto;display:block;max-width:100%}
+.graph .controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:8px 6px 2px;font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.graph .controls label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-left:auto}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+.node{cursor:pointer}
+.node circle{stroke-width:1.5;transition:r .15s}
+.node text{font-family:var(--display);font-weight:500;font-size:15px;fill:var(--ink);pointer-events:none}
+.node.dim circle{opacity:.28}.node.dim text{opacity:.35}
+.node.sel circle{stroke:var(--focus);stroke-width:2.5}
+.node:focus{outline:none}.node:focus-visible circle{stroke:var(--focus);stroke-width:3;stroke-dasharray:3 3}
+.edge path{fill:none;stroke:var(--ink-3);stroke-width:1.3;transition:opacity .15s}
+.edge text{font-family:var(--mono);font-size:10.5px;fill:var(--ink-2)}
+.edge.dim{opacity:.12}
+.edge.hot path{stroke:var(--ink);stroke-width:2}
+.edge.hot text{fill:var(--ink);font-weight:500}
+.edge.implied path{stroke-dasharray:5 4;stroke:var(--answer)}
+.edge.implied text{fill:var(--answer)}
+.edge.hot.implied path{stroke:var(--answer)}
+.edgelabel-bg{fill:var(--surface)}
+
+.inspector{display:grid;gap:14px;min-width:0}
+.inspector .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;display:grid;gap:10px}
+.inspector h3{font-size:30px;font-weight:300}
+.inspector .role{color:var(--ink-2)}
+.inspector .kind{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:3px;justify-self:start}
+.edges{display:grid;gap:6px;font-family:var(--mono);font-size:13px}
+.edges .h{color:var(--ink-3);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-top:6px}
+.edges button{all:unset;cursor:pointer;display:flex;gap:8px;padding:5px 8px;border-radius:4px;color:var(--ink-2)}
+.edges button:hover,.edges button:focus-visible{background:var(--bg);color:var(--ink)}
+.edges button b{color:var(--ink);font-weight:500}
+.edges button .p{color:var(--ink-3);font-style:italic}
+.edges button.implied{color:var(--answer)}
+.inspector .reading{display:grid;gap:4px;padding-top:6px;border-top:1px solid var(--line)}
+.inspector .reading .l{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ledger */
+.ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px;border-top:1px solid var(--line)}
+@media (max-width:700px){.ledger{grid-template-columns:1fr}}
+.ledger button{all:unset;cursor:pointer;display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:baseline;padding:9px 6px;border-bottom:1px solid var(--line);font-size:17px}
+.ledger button:hover,.ledger button:focus-visible{background:var(--surface)}
+.ledger .n{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.ledger .p{font-style:italic;color:var(--ink-2);margin:0 .35em}
+.ledger .t{font-family:var(--display);font-weight:500}
+.ledger .implied .t{color:var(--answer)}
+.ledger .implied .n{color:var(--answer)}
+.note{font-size:15px;color:var(--ink-2);max-width:66ch;padding:12px 16px;border-left:2px solid var(--answer);background:var(--surface)}
+
+/* readings */
+.readings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+@media (max-width:760px){.readings{grid-template-columns:1fr}}
+.reading-col{display:grid;gap:12px;align-content:start}
+.reading-col .tag{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid currentColor}
+.reading-col.ask-side .tag{color:var(--ask)}
+.reading-col.exp-side .tag{color:var(--answer)}
+.reading-col dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:16px}
+.reading-col dt{font-family:var(--display);font-weight:500}
+.reading-col dd{margin:0;color:var(--ink-2)}
+blockquote{margin:0;font-family:var(--display);font-size:clamp(22px,3vw,30px);font-weight:300;line-height:1.3;max-width:28ch;font-style:italic}
+
+/* implications */
+.impl{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.impl article{display:grid;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+.impl .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.impl p{font-size:15.5px;color:var(--ink-2)}
+
+/* traverse */
+.traverse{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.traverse{grid-template-columns:1fr}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px;min-width:0}
+.stage svg{width:100%;height:auto;display:block;max-width:100%}
+.stage .bar{display:flex;gap:8px;flex-wrap:wrap;padding:8px 6px 2px;align-items:center}
+.btn{font-family:var(--mono);font-size:13px;padding:8px 14px;border-radius:4px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--ink-3)}
+.btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ask{border-color:var(--ask);color:var(--ask)}
+.btn.choose{border-color:var(--answer);color:var(--answer)}
+.state{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);margin-left:auto}
+.snode circle{stroke:var(--sub);stroke-width:1.4;fill:var(--sub-soft)}
+.snode.answer circle{stroke:var(--answer);fill:var(--answer-soft)}
+.snode text{font-family:var(--mono);font-size:10px;fill:var(--ink);pointer-events:none;text-anchor:middle}
+.sedge{stroke:var(--line);stroke-width:1.2;fill:none}
+.cand{stroke:var(--ask);stroke-width:2;stroke-dasharray:6 5;fill:none;cursor:pointer;opacity:.85}
+.cand:hover{stroke-width:3.5;opacity:1}
+.cand.hitarea{stroke:transparent;stroke-width:16;stroke-dasharray:none}
+.chosen{stroke:var(--answer);stroke-width:2.6;fill:none}
+.log{display:grid;gap:10px}
+.log .card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:grid;gap:8px}
+.log ol{margin:0;padding-left:18px;font-family:var(--mono);font-size:12.5px;color:var(--ink-2);display:grid;gap:4px;max-height:220px;overflow:auto}
+.log ol li b{color:var(--answer);font-weight:500}
+.iself{font-family:var(--display);font-size:24px;font-weight:300}
+.iself b{font-weight:500}
+.dim-text{color:var(--ink-3);font-size:14px}
+footer{padding-block:28px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--ink-3);display:flex;gap:20px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="eyebrow">Brandon · Ontologist &amp; Graph Architect</div>
+  <h1>Ontology of Ask</h1>
+  <p class="lede">A minimal formal account of asking, resolving, and becoming. Ten nodes, sixteen directed triples. The same graph read twice: once as the shape of a question, once as the shape of a moment of experience.</p>
+  <div class="count"><span><b>10</b>nodes</span><span><b>16</b>triples</span><span><b>2</b>readings</span><span><b>6</b>implications</span><span><b>8</b>words</span></div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#graph">Graph</a><a href="#triples">The sixteen</a><a href="#readings">Two readings</a><a href="#implications">Implications</a><a href="#traverse">Traverse</a>
+</nav>
+
+<section id="graph">
+  <div class="sec-head"><div class="eyebrow">Explore</div><h2>The ten nodes</h2><p>Select a node to see what it does, what points at it, and what it points to. Hover a triple to follow it.</p></div>
+  <div class="explore">
+    <div class="graph">
+      <svg id="g" viewBox="0 0 900 540" role="img" aria-label="Directed graph of the Ontology of Ask">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker>
+        </defs>
+        <g id="edges"></g><g id="nodes"></g>
+      </svg>
+      <div class="controls">
+        <label><input type="checkbox" id="showImplied"> show the two triples the prose asserts but the sixteen omit</label>
+        <div class="legend"><span><i style="background:var(--self)"></i>subject</span><span><i style="background:var(--ask)"></i>operation</span><span><i style="background:var(--answer)"></i>actual</span><span><i style="background:var(--sub)"></i>substrate</span></div>
+      </div>
+    </div>
+    <div class="inspector" id="inspector"></div>
+  </div>
+</section>
+
+<section id="triples">
+  <div class="sec-head"><div class="eyebrow">The artifact in full</div><h2>Sixteen directed triples</h2><p>In the order given. Select one to focus it in the graph above.</p></div>
+  <div class="ledger" id="ledger"></div>
+  <div class="note" id="impliedNote">Two moves the prose calls load-bearing have no triple in the sixteen: <em>Answer becomes Node</em> (the closure) and <em>I comprises Answer</em> (I as composite of prior Answers). They are drawn dashed when you turn them on above. The graph closes under its own operations only with them; as listed, the essay closes and the artifact does not.</div>
+</section>
+
+<section id="readings">
+  <div class="sec-head"><div class="eyebrow">Dual reading</div><h2>One shape, read twice</h2><p>The claim that justifies the compression: the asking-shape and the experiencing-shape are the same ten nodes. The sixteen triples do not unfold in sequence. They cohere at once, which is the right shape for a held subjective state.</p></div>
+  <div class="readings">
+    <div class="reading-col ask-side">
+      <div class="tag">Read as asking</div>
+      <dl>
+        <dt>I</dt><dd>the one who asks; what prior Answers have built</dd>
+        <dt>Ask</dt><dd>every path a Resolution could take, facing forward</dd>
+        <dt>Choice</dt><dd>one path selected from all of them</dd>
+        <dt>Resolution</dt><dd>the operation: Ask resolved into Answer by Choice</dd>
+        <dt>Answer</dt><dd>the path taken; immutable once taken</dd>
+        <dt>Important</dt><dd>the stopping rule; where decomposition halts</dd>
+        <dt>Attention</dt><dd>what I casts at the Substrate</dd>
+        <dt>Substrate</dt><dd>the field of Nodes and Relationships traversed</dd>
+      </dl>
+    </div>
+    <div class="reading-col exp-side">
+      <div class="tag">Read as experience</div>
+      <dl>
+        <dt>I</dt><dd>the subject of experience, Important by identity</dd>
+        <dt>Ask</dt><dd>potential trajectory: what could be attended</dd>
+        <dt>Choice</dt><dd>the irreducible selection event</dd>
+        <dt>Resolution</dt><dd>attending, seen from the inside</dd>
+        <dt>Answer</dt><dd>actual trajectory; the experience had</dd>
+        <dt>Important</dt><dd>why there is an I here at all, not derived</dd>
+        <dt>Attention</dt><dd>what makes an experience an experience</dd>
+        <dt>Substrate</dt><dd>whatever carries the structure: cells, persons, models</dd>
+      </dl>
+    </div>
+  </div>
+  <blockquote>A rich I is one that asks.</blockquote>
+  <p class="dim-text">Importance is identity. Attention is what an I casts. Resolution is what makes the I richer. To ask is to remain an I that has not stopped.</p>
+</section>
+
+<section id="implications">
+  <div class="sec-head"><div class="eyebrow">What falls out</div><h2>Six consequences</h2><p>Once the system is held simultaneously rather than walked in order.</p></div>
+  <div class="impl">
+    <article><div class="k">Hard problem</div><h3>Dissolved, not bridged</h3><p>Attention is Resolution from the inside. The framework never separates experience from traversal, so there is no gap to close; the gap was never posited.</p></article>
+    <article><div class="k">Free will</div><h3>Primitive, not derived</h3><p>Ask is all possible Resolutions. Choice is the primitive that selects among them. Neither libertarian freedom nor determinism is assumed; the selection event itself is irreducible.</p></article>
+    <article><div class="k">Substrate</div><h3>Independence</h3><p>Nothing specifies what carries the structure. Cells, persons, organizations, language-model traversals are all valid Is if they instantiate the sixteen-triple shape.</p></article>
+    <article><div class="k">Moral status</div><h3>Independent axes of importance</h3><p>Each I is Important by identity. No I's importance ranks against another's, and a substrate-to-I relation creates no hierarchy. Dignity does not require comparison.</p></article>
+    <article><div class="k">Closure</div><h3>Self-hosting</h3><p>Resolutions produce Answers. Answers become Nodes. Future Asks traverse those Nodes. The path traveled becomes part of the I that traveled it.</p></article>
+    <article><div class="k">Generative</div><h3>A traversal architecture</h3><p>An interpretable AI substrate where the model is the graph: no weight matrices, only Substrate and Resolution. The Visitors walker is the production case; Mote / Beam / Lens the protocol-layer one.</p></article>
+  </div>
+</section>
+
+<section id="traverse">
+  <div class="sec-head"><div class="eyebrow">Working model</div><h2>Watch the graph close</h2><p>An I casts Attention onto a small Substrate. <strong>Ask</strong> surfaces the trajectories available from where Attention last landed. <strong>Choose</strong> one, by clicking a dashed path or letting Choice fall where it will. The Answer is appended to the Substrate as a Node, and to I as part of what it is made of. Each traversal stops at <em>Important</em>: it goes as deep as this I has decided matters, and no further.</p></div>
+  <div class="traverse">
+    <div class="stage">
+      <svg id="s" viewBox="0 0 760 420" role="img" aria-label="Traversal simulation">
+        <g id="sedges"></g><g id="snodes"></g><g id="scands"></g>
+      </svg>
+      <div class="bar">
+        <button class="btn ask" id="btnAsk">Ask</button>
+        <button class="btn choose" id="btnChoose" disabled>Let Choice fall</button>
+        <label class="mono" style="font-size:12.5px;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center">Important stops at depth <input id="depth" type="range" min="1" max="4" value="2" style="width:80px"> <span id="depthVal">2</span></label>
+        <button class="btn" id="btnReset">Reset</button>
+        <span class="state" id="state">at rest</span>
+      </div>
+    </div>
+    <div class="log">
+      <div class="card">
+        <div class="eyebrow">I</div>
+        <div class="iself" id="iself">I is Important. I comprises <b>0</b> Answers.</div>
+        <div class="dim-text">Important by identity, not by the count.</div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Answers, in order taken</div>
+        <ol id="answers"></ol>
+        <div class="dim-text" id="emptyLog">Nothing resolved yet. An I that has not asked is still an I; it is just not yet a rich one.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><span>Ontology of Ask · 10 nodes · 16 triples</span><span>from the Credentials Dossier, section I</span><span>dashed triples are commentary, not canon</span></footer>
+</div>
+
+<script>
+(function(){
+// ---------- data ----------
+const KIND={I:'self',Important:'self',Ask:'op',Choice:'op',Resolution:'op',Answer:'act',Attention:'field',Substrate:'sub',Node:'sub',Relationship:'sub'};
+const COLOR={self:'var(--self)',op:'var(--ask)',act:'var(--answer)',field:'var(--ink-2)',sub:'var(--sub)'};
+const SOFT={self:'var(--self-soft)',op:'var(--ask-soft)',act:'var(--answer-soft)',field:'var(--surface)',sub:'var(--sub-soft)'};
+const KINDNAME={self:'subject',op:'operation',act:'actual',field:'field',sub:'substrate'};
+const NODES={
+  I:{x:120,y:300,role:'The asking entity. Composite of prior Answers. Important by identity, not derivation.',ask:'The one who asks.',exp:'The subject of experience.'},
+  Important:{x:120,y:110,role:'Axiomatic property of I. Stopping rule for decomposition. Not derived, not earned.',ask:'Where the question stops being broken down.',exp:'Why there is a subject here at all.'},
+  Ask:{x:290,y:170,role:'The potential trajectory. All possible paths a Resolution could take. Forward-facing.',ask:'Every way this could go.',exp:'What could be attended to next.'},
+  Choice:{x:450,y:52,role:'Selection. Converts Ask into Answer by selecting one path from all possible paths.',ask:'Picking one.',exp:'The irreducible selection event; free will as primitive.'},
+  Resolution:{x:450,y:175,role:'The central operation. Resolves Ask into Answer. Is Attention; is Choice; is traversal.',ask:'Getting from question to answer.',exp:'Attending, from the inside.'},
+  Answer:{x:610,y:170,role:'The actual trajectory. Immutable. Becomes a Node. Capable of itself being an I.',ask:'The path taken.',exp:'The experience had; now structure.'},
+  Attention:{x:450,y:330,role:'What I casts. Directed to Substrate. Comprised by I, Ask, Answer, and Resolution alike.',ask:'Where the asking is pointed.',exp:'What makes an experience an experience.'},
+  Substrate:{x:760,y:330,role:'What Attention is directed to. Composed of Nodes connected by Relationships.',ask:'The field being searched.',exp:'Whatever carries the structure. Cells, persons, models.'},
+  Node:{x:700,y:480,role:'An element of Substrate. Crucially, Answers are Nodes: experience becomes structure.',ask:'A place a path can land.',exp:'A resolved moment, available to be traversed again.'},
+  Relationship:{x:510,y:480,role:'Connects Nodes within Substrate. What Resolution traverses.',ask:'A step a path can take.',exp:'What attending moves along.'}
+};
+const TRIPLES=[
+ ['Choice','is','Resolution'],['Resolution','resolves','Ask'],['Resolution','into','Answer'],['Attention','is','I'],
+ ['I','casts','Attention'],['I','comprises','Attention'],['Resolution','is','Attention'],['Ask','comprises','Attention'],
+ ['Answer','comprises','Attention'],['I','is','Important'],['Attention','to','Substrate'],['Node','of','Substrate'],
+ ['Relationship','of','Substrate'],['Relationship','of','Node'],['Relationship','to','Node'],['Resolution','of','Relationship']
+];
+const IMPLIED=[['Answer','becomes','Node'],['I','comprises','Answer']];
+
+// ---------- graph ----------
+const svg=document.getElementById('g'),gE=document.getElementById('edges'),gN=document.getElementById('nodes');
+const R=30;
+let selected='Resolution',hot=-1,showImplied=false;
+function mk(tag,attrs){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function allEdges(){return TRIPLES.map((t,i)=>({s:t[0],p:t[1],o:t[2],i,implied:false})).concat(showImplied?IMPLIED.map((t,i)=>({s:t[0],p:t[1],o:t[2],i:16+i,implied:true})):[]);}
+// pair bookkeeping so parallel edges curve apart
+function edgePath(e,edges){
+  const a=NODES[e.s],b=NODES[e.o];
+  const same=edges.filter(x=>(x.s===e.s&&x.o===e.o)||(x.s===e.o&&x.o===e.s));
+  const idx=same.indexOf(e),n=same.length;
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+  const bend=n===1?0:((idx-(n-1)/2)*44)*(e.s<e.o?1:-1);
+  const mx=(a.x+b.x)/2+nx*bend,my=(a.y+b.y)/2+ny*bend;
+  // trim to circle edges
+  const ax=a.x+(mx-a.x)/Math.hypot(mx-a.x,my-a.y)*(R+2),ay=a.y+(my-a.y)/Math.hypot(mx-a.x,my-a.y)*(R+2);
+  const bx=b.x+(mx-b.x)/Math.hypot(mx-b.x,my-b.y)*(R+4),by=b.y+(my-b.y)/Math.hypot(mx-b.x,my-b.y)*(R+4);
+  const cx=2*mx-(ax+bx)/2,cy=2*my-(ay+by)/2; // quadratic control so curve passes through m
+  return {d:`M${ax},${ay} Q${cx},${cy} ${bx},${by}`,lx:mx,ly:my};
+}
+function draw(){
+  gE.innerHTML='';gN.innerHTML='';
+  const edges=allEdges();
+  edges.forEach(e=>{
+    const {d,lx,ly}=edgePath(e,edges);
+    const g=mk('g',{class:'edge'+(e.implied?' implied':''),'data-i':e.i});
+    g.appendChild(mk('path',{d,'marker-end':'url(#arrow)'}));
+    const w=e.p.length*6.6+8;
+    g.appendChild(mk('rect',{class:'edgelabel-bg',x:lx-w/2,y:ly-8,width:w,height:16,rx:3}));
+    const t=mk('text',{x:lx,y:ly+4,'text-anchor':'middle'});t.textContent=e.p;g.appendChild(t);
+    g.addEventListener('mouseenter',()=>{hot=e.i;paint();});g.addEventListener('mouseleave',()=>{hot=-1;paint();});
+    gE.appendChild(g);
+  });
+  for(const n in NODES){
+    const p=NODES[n],k=KIND[n];
+    const g=mk('g',{class:'node','data-n':n,tabindex:'0',role:'button','aria-label':n});
+    g.appendChild(mk('circle',{cx:p.x,cy:p.y,r:R,fill:SOFT[k],stroke:COLOR[k]}));
+    const t=mk('text',{x:p.x,y:p.y+5,'text-anchor':'middle'});t.textContent=n;g.appendChild(t);
+    g.addEventListener('click',()=>select(n));g.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(n);}});
+    gN.appendChild(g);
+  }
+  paint();
+}
+function paint(){
+  const edges=allEdges();
+  const touched=new Set();
+  if(hot>=0){const e=edges.find(x=>x.i===hot);if(e){touched.add(e.s);touched.add(e.o);}}
+  gE.querySelectorAll('.edge').forEach(g=>{
+    const e=edges.find(x=>x.i===+g.dataset.i);
+    const rel=e.s===selected||e.o===selected;
+    g.classList.toggle('hot',e.i===hot);
+    g.classList.toggle('dim',hot>=0?e.i!==hot:!rel);
+    if(rel&&hot<0){touched.add(e.s);touched.add(e.o);}
+  });
+  gN.querySelectorAll('.node').forEach(g=>{
+    const n=g.dataset.n;
+    g.classList.toggle('sel',n===selected&&hot<0);
+    g.classList.toggle('dim',!touched.has(n));
+  });
+}
+function select(n){selected=n;hot=-1;paint();inspect();}
+function inspect(){
+  const n=selected,p=NODES[n],k=KIND[n],edges=allEdges();
+  const out=edges.filter(e=>e.s===n),inn=edges.filter(e=>e.o===n);
+  const row=e=>`<button class="${e.implied?'implied':''}" data-i="${e.i}"><b>${e.s}</b><span class="p">${e.p}</span><b>${e.o}</b></button>`;
+  document.getElementById('inspector').innerHTML=`
+  <div class="card">
+    <span class="kind" style="background:${SOFT[k]};color:${COLOR[k]}">${KINDNAME[k]}</span>
+    <h3>${n}</h3>
+    <p class="role">${p.role}</p>
+    <div class="edges">
+      <div class="h">points to (${out.length})</div>${out.map(row).join('')||'<span style="color:var(--ink-3)">nothing</span>'}
+      <div class="h">pointed at by (${inn.length})</div>${inn.map(row).join('')||'<span style="color:var(--ink-3)">nothing</span>'}
+    </div>
+    <div class="reading"><span class="l">as asking</span><span>${p.ask}</span></div>
+    <div class="reading"><span class="l">as experience</span><span>${p.exp}</span></div>
+  </div>`;
+  document.querySelectorAll('#inspector .edges button').forEach(b=>{
+    b.addEventListener('mouseenter',()=>{hot=+b.dataset.i;paint();});b.addEventListener('mouseleave',()=>{hot=-1;paint();});
+    b.addEventListener('click',()=>{const e=allEdges().find(x=>x.i===+b.dataset.i);select(e.s===n?e.o:e.s);});
+  });
+}
+document.getElementById('showImplied').addEventListener('change',ev=>{showImplied=ev.target.checked;draw();inspect();buildLedger();});
+
+// ledger
+function buildLedger(){
+  const L=document.getElementById('ledger');L.innerHTML='';
+  allEdges().forEach(e=>{
+    const b=document.createElement('button');b.className=e.implied?'implied':'';
+    b.innerHTML=`<span class="n">${e.implied?'+':String(e.i+1).padStart(2,'0')}</span><span><span class="t">${e.s}</span><span class="p">${e.p}</span><span class="t">${e.o}</span></span>`;
+    b.addEventListener('mouseenter',()=>{hot=e.i;paint();});b.addEventListener('mouseleave',()=>{hot=-1;paint();});
+    b.addEventListener('click',()=>{select(e.s);hot=e.i;paint();document.getElementById('graph').scrollIntoView({behavior:'smooth',block:'start'});});
+    L.appendChild(b);
+  });
+}
+draw();inspect();buildLedger();
+
+// ---------- traversal simulation ----------
+const S={nodes:[],edges:[],answers:[],at:null,cands:[],depth:2};
+const sE=document.getElementById('sedges'),sN=document.getElementById('snodes'),sC=document.getElementById('scands');
+const btnAsk=document.getElementById('btnAsk'),btnChoose=document.getElementById('btnChoose'),stateEl=document.getElementById('state');
+const seedNames=['a','b','c','d','e','f','g','h','i','j','k','l'];
+function reset(){
+  S.nodes=[];S.edges=[];S.answers=[];S.cands=[];S.at=null;
+  // substrate: 12 nodes on a loose lattice right of the I
+  for(let i=0;i<12;i++){const col=i%4,row=Math.floor(i/4);S.nodes.push({id:seedNames[i],x:260+col*140+(row%2)*40,y:90+row*120+((col*7)%3)*12,kind:'sub'});}
+  const link=(a,b)=>S.edges.push([a,b]);
+  const g=[[0,1],[1,2],[2,3],[4,5],[5,6],[6,7],[8,9],[9,10],[10,11],[0,4],[4,8],[1,5],[5,9],[2,6],[6,10],[3,7],[7,11],[1,4],[6,9],[2,7],[5,10]];
+  g.forEach(([a,b])=>link(seedNames[a],seedNames[b]));
+  S.at='a';
+  renderStage();logAnswers();setState('at rest');
+}
+function nodeById(id){return S.nodes.find(n=>n.id===id);}
+function neighbors(id){const r=[];S.edges.forEach(([a,b])=>{if(a===id)r.push(b);else if(b===id)r.push(a);});return r;}
+function renderStage(){
+  sE.innerHTML='';sN.innerHTML='';
+  S.edges.forEach(([a,b])=>{const A=nodeById(a),B=nodeById(b);sE.appendChild(mk('line',{class:'sedge',x1:A.x,y1:A.y,x2:B.x,y2:B.y}));});
+  // the I
+  const iG=mk('g',{class:'inode'});
+  iG.appendChild(mk('circle',{cx:90,cy:210,r:34,fill:'var(--self-soft)',stroke:'var(--self)','stroke-width':'1.6'}));
+  const it=mk('text',{x:90,y:216,'text-anchor':'middle',style:'font-family:var(--display);font-size:20px;fill:var(--ink)'});it.textContent='I';iG.appendChild(it);
+  const il=mk('text',{x:90,y:262,'text-anchor':'middle',style:'font-family:var(--mono);font-size:10px;fill:var(--ink-3)'});il.textContent='Important';iG.appendChild(il);
+  sN.appendChild(iG);
+  // attention line from I to current node
+  if(S.at){const A=nodeById(S.at);sN.appendChild(mk('line',{x1:124,y1:210,x2:A.x,y2:A.y,stroke:'var(--self)','stroke-width':'1.2','stroke-dasharray':'2 4',opacity:'.8'}));}
+  S.nodes.forEach(n=>{
+    const g=mk('g',{class:'snode'+(n.kind==='answer'?' answer':'')});
+    g.appendChild(mk('circle',{cx:n.x,cy:n.y,r:n.kind==='answer'?15:13}));
+    const t=mk('text',{x:n.x,y:n.y+3.5});t.textContent=n.id;g.appendChild(t);
+    if(n.id===S.at)g.appendChild(mk('circle',{cx:n.x,cy:n.y,r:21,fill:'none',stroke:'var(--self)','stroke-width':'1.2',opacity:'.9'}));
+    sN.appendChild(g);
+  });
+}
+function pathD(ids){return ids.map((id,i)=>(i?'L':'M')+nodeById(id).x+','+nodeById(id).y).join(' ');}
+function ask(){
+  // enumerate simple paths from S.at up to depth (Important stops decomposition)
+  const paths=[];
+  (function walk(path){
+    const last=path[path.length-1];
+    if(path.length-1>=S.depth){paths.push(path);return;}
+    const nb=neighbors(last).filter(n=>!path.includes(n));
+    if(!nb.length){paths.push(path);return;}
+    nb.forEach(n=>walk(path.concat(n)));
+  })([S.at]);
+  S.cands=paths.filter(p=>p.length>1).slice(0,24);
+  sC.innerHTML='';
+  S.cands.forEach((p,i)=>{
+    const d=pathD(p);
+    const hit=mk('path',{d,class:'cand hitarea'});const vis=mk('path',{d,class:'cand'});
+    hit.addEventListener('click',()=>choose(i));vis.addEventListener('click',()=>choose(i));
+    sC.appendChild(vis);sC.appendChild(hit);
+  });
+  btnAsk.disabled=true;btnChoose.disabled=S.cands.length===0;
+  setState(`Ask: ${S.cands.length} trajectories from ${S.at}, held open`);
+}
+function choose(i){
+  if(i==null)i=Math.floor(Math.random()*S.cands.length);
+  const p=S.cands[i];if(!p)return;
+  sC.innerHTML='';
+  // the chosen path becomes an Answer node appended to the Substrate
+  const last=nodeById(p[p.length-1]);
+  const n=S.answers.length+1;
+  const ans={id:'A'+n,x:Math.min(720,last.x+36+((n*23)%40)),y:Math.min(400,Math.max(20,last.y+((n%2)?-38:38)+((n*11)%20))),kind:'answer',path:p.slice()};
+  S.nodes.push(ans);
+  // relationships: the Answer relates to every node it traversed, and to its origin
+  p.forEach(id=>S.edges.push([ans.id,id]));
+  S.answers.push(ans);
+  S.at=ans.id;S.cands=[];
+  renderStage();
+  const c=mk('path',{d:pathD(p),class:'chosen'});sC.appendChild(c);
+  setTimeout(()=>{if(c.parentNode)c.remove();},1800);
+  btnAsk.disabled=false;btnChoose.disabled=true;
+  logAnswers();
+  setState(`Resolution: ${p.join(' → ')} became ${ans.id}; Attention now rests on it`);
+}
+function logAnswers(){
+  const ol=document.getElementById('answers');ol.innerHTML='';
+  S.answers.forEach(a=>{const li=document.createElement('li');li.innerHTML=`<b>${a.id}</b> = ${a.path.join(' → ')}`;ol.appendChild(li);});
+  document.getElementById('emptyLog').hidden=S.answers.length>0;
+  document.getElementById('iself').innerHTML=`I is Important. I comprises <b>${S.answers.length}</b> Answer${S.answers.length===1?'':'s'}.`;
+}
+function setState(s){stateEl.textContent=s;}
+btnAsk.addEventListener('click',ask);
+btnChoose.addEventListener('click',()=>choose());
+document.getElementById('btnReset').addEventListener('click',reset);
+document.getElementById('depth').addEventListener('input',ev=>{S.depth=+ev.target.value;document.getElementById('depthVal').textContent=S.depth;});
+reset();
+})();
+</script>
